@@ -28,6 +28,38 @@
 #
 # Copyright (c) 2021 ETH Zurich, Nikita Rudin
 
-from .actor_critic import ActorCritic
-from .actor_critic_recurrent import ActorCriticRecurrent
-from .actor_critic_tocabi import ActorCriticTocabi
+import numpy as np
+
+import torch
+import torch.nn as nn
+from torch.distributions import Normal
+from torch.nn.modules import rnn
+
+from rsl_rl.modules.actor_critic import ActorCritic
+
+def initialize_weights(m):
+    if isinstance(m, nn.Linear): 
+        torch.nn.init.orthogonal_(m.weight, gain = 0.01) 
+        if m.bias is not None:
+            nn.init.constant_(m.bias, 0)
+
+
+class ActorCriticTocabi(ActorCritic):
+    is_recurrent = False
+    def __init__(self,  num_actor_obs,
+                        num_critic_obs,
+                        num_actions,
+                        actor_hidden_dims=[256, 256, 256],
+                        critic_hidden_dims=[256, 256, 256],
+                        activation='elu',
+                        init_noise_std=1.0,
+                        **kwargs):
+        if kwargs:
+            print("ActorCriticTocabi.__init__ got unexpected arguments, which will be ignored: " + str([key for key in kwargs.keys()]))
+        super(ActorCriticTocabi, self).__init__(num_actor_obs, num_critic_obs, num_actions, actor_hidden_dims, critic_hidden_dims, activation, init_noise_std, **kwargs)
+        
+        self.actor.apply(initialize_weights)
+        self.critic.apply(initialize_weights)
+
+        # Fixed action noise
+        self.std = nn.Parameter(init_noise_std * torch.ones(num_actions), requires_grad=False)
