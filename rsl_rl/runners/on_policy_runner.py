@@ -94,7 +94,6 @@ class OnPolicyRunner:
             self.writer = SummaryWriter(log_dir=self.log_dir, flush_secs=10)
         if self.use_wandb:
             from rsl_rl.utils.wandb_utils import WandbSummaryWriter
-
             self.wandb_logger = WandbSummaryWriter(log_dir=self.log_dir, flush_secs=10, cfg=self.cfg)
             self.wandb_logger.log_config(self.env.cfg, self.cfg, self.alg_cfg, self.policy_cfg)
         if init_at_random_ep_len:
@@ -201,9 +200,8 @@ class OnPolicyRunner:
         if len(locs["rewbuffer"]) > 0:
             self.writer.add_scalar("Train/mean_reward", statistics.mean(locs["rewbuffer"]), locs["it"])
             self.writer.add_scalar("Train/mean_episode_length", statistics.mean(locs["lenbuffer"]), locs["it"])
-            if self.logger_type != "wandb":  # wandb does not support non-integer x-axis logging
-                self.writer.add_scalar("Train/mean_reward/time", statistics.mean(locs["rewbuffer"]), self.tot_time)
-                self.writer.add_scalar(
+            self.writer.add_scalar("Train/mean_reward/time", statistics.mean(locs["rewbuffer"]), self.tot_time)
+            self.writer.add_scalar(
                     "Train/mean_episode_length/time", statistics.mean(locs["lenbuffer"]), self.tot_time
                 )
 
@@ -286,11 +284,7 @@ class OnPolicyRunner:
         if len(locs["rewbuffer"]) > 0:
             self.wandb_logger.add_scalar("Train/mean_reward", statistics.mean(locs["rewbuffer"]), locs["it"])
             self.wandb_logger.add_scalar("Train/mean_episode_length", statistics.mean(locs["lenbuffer"]), locs["it"])
-            if self.logger_type != "wandb":  # wandb does not support non-integer x-axis logging
-                self.wandb_logger.add_scalar("Train/mean_reward/time", statistics.mean(locs["rewbuffer"]), self.tot_time)
-                self.wandb_logger.add_scalar(
-                    "Train/mean_episode_length/time", statistics.mean(locs["lenbuffer"]), self.tot_time
-                )
+ 
 
     def save(self, path, infos=None):
         torch.save({
