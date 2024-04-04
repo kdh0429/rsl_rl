@@ -53,6 +53,7 @@ class ActorCriticTocabi(ActorCritic):
                         critic_hidden_dims=[256, 256, 256],
                         activation='elu',
                         init_noise_std=1.0,
+                        end_noise_std=0.05,
                         **kwargs):
         if kwargs:
             print("ActorCriticTocabi.__init__ got unexpected arguments, which will be ignored: " + str([key for key in kwargs.keys()]))
@@ -63,3 +64,9 @@ class ActorCriticTocabi(ActorCritic):
 
         # Fixed action noise
         self.std = nn.Parameter(init_noise_std * torch.ones(num_actions), requires_grad=False)
+        self.init_noise_std = init_noise_std
+        self.end_noise_std = end_noise_std
+
+    def update_action_noise(self, progress):
+        action_noise = self.init_noise_std + (self.end_noise_std - self.init_noise_std) * progress
+        self.std = nn.Parameter(action_noise * torch.ones_like(self.std), requires_grad=False)

@@ -68,6 +68,10 @@ class OnPolicyRunner:
         self.alg: PPO = alg_class(actor_critic, device=self.device, **self.alg_cfg)
         self.num_steps_per_env = self.cfg["num_steps_per_env"]
         self.save_interval = self.cfg["save_interval"]
+        
+        # DH Customize
+        self.learning_rate_curriculum = True if "learning_rate_min" in self.alg_cfg.keys() else False
+        self.action_noise_curriculum = True if "end_noise_std" in self.policy_cfg.keys() else False
 
         # init storage and model
         self.alg.init_storage(self.env.num_envs, self.num_steps_per_env, [self.env.num_obs], [self.env.num_privileged_obs], [self.env.num_actions])
@@ -129,6 +133,12 @@ class OnPolicyRunner:
                 # Learning step
                 start = stop
                 self.alg.compute_returns(critic_obs)
+
+            # DH Customize
+            if (self.learning_rate_curriculum):
+                self.alg.update_learning_rate_linear(it/tot_iter)
+            if (self.action_noise_curriculum):
+                self.alg.actor_critic.update_action_noise(it/tot_iter)
             
             mean_value_loss, mean_surrogate_loss = self.alg.update()
             stop = time.time()

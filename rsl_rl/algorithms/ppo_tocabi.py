@@ -72,30 +72,10 @@ class PPOTocabi(PPO):
                                         device=device,
                                         )
 
-        self.device = device
-
-        self.desired_kl = desired_kl
-        self.schedule = schedule
-        self.learning_rate = learning_rate
-
         # PPO components
-        self.actor_critic = actor_critic
-        self.actor_critic.to(self.device)
-        self.storage = None # initialized later
         self.optimizer_actor = optim.Adam(self.actor_critic.actor.parameters(), lr=learning_rate)
         self.optimizer_critic = optim.Adam(self.actor_critic.critic.parameters(), lr=learning_rate_critic)
-        self.transition = RolloutStorage.Transition()
-
-        # PPO parameters
-        self.clip_param = clip_param
-        self.num_learning_epochs = num_learning_epochs
-        self.num_mini_batches = num_mini_batches
-        self.value_loss_coef = value_loss_coef
-        self.entropy_coef = entropy_coef
-        self.gamma = gamma
-        self.lam = lam
-        self.max_grad_norm = max_grad_norm
-        self.use_clipped_value_loss = use_clipped_value_loss
+        self.learning_rate_min = learning_rate_min
 
 
     def update(self):
@@ -168,3 +148,9 @@ class PPOTocabi(PPO):
         self.storage.clear()
 
         return mean_value_loss, mean_surrogate_loss
+
+    def update_learning_rate_linear(self, progress):
+        lr = self.learning_rate + (self.learning_rate_min - self.learning_rate) * progress
+        for param_group in self.optimizer_actor.param_groups:
+            param_group['lr'] = lr
+
