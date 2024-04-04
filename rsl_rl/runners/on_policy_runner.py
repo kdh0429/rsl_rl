@@ -37,6 +37,7 @@ from torch.utils.tensorboard import SummaryWriter
 import torch
 
 from rsl_rl.algorithms import PPO
+from rsl_rl.algorithms.ppo_tocabi import PPOTocabi
 from rsl_rl.modules import ActorCritic, ActorCriticRecurrent, ActorCriticTocabi
 from rsl_rl.env import VecEnv
 
